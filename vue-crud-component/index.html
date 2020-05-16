@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>demo</title>
+    <style>
+        div {
+            margin-bottom: 20px;
+        }
+        
+        footer {
+            text-align: right;
+            color: gray;
+        }
+        div#crud__result__form {
+            border-right: 1px solid black;
+        }
+        #crud__error {
+            color: red;
+        }
+        #crud__info {
+            color: green;
+        }
+        #crud__title {
+            text-decoration: underline;
+        }
+        .input {
+            border-right: 4px solid red;
+        }
+    </style>
+  </head>
+  <body>
+      <div class="container" id="app">
+        <div id="container__heading">
+            <h1>Hello, world!: {{ message }} </h1>
+        </div>
+        <div id="container__content">
+           <crud></crud>
+        </div>
+        <div id="container__footer">
+            <hr>
+            <footer>footer@footer.net</footer>
+        </div>
+      </div>
+    
+      <template id="template__crud">
+          <section>
+              <div id="crud__info" v-if="entity.success">
+                <i class="fa fa-check fa-2x" aria-hidden="true"></i> 
+                Saved Sucessafully!
+              </div>
+              <div id="crud__error" v-if="entity.error">
+                <i class="fa fa-exclamation-circle fa-2x" aria-hidden="true"></i> 
+                An Error Occured!, Please try after some time.
+                {{ error }}
+              </div>
+              <div id="crud__title">
+                  <h3>{{ entity.title }}</h3>
+              </div>
+              <div id="crud__result" class="row">
+                  <div id="crud__result__form" class="col-3">
+                    <div id="crud__result__form_caption">
+                        <p>{{entity.formInputsCaption}}</p>
+                    </div>
+                     <div class="form-group" v-for="(formInput,formInputIdx) in entity.formInputs" :key="formInputIdx">
+                        <label :for="formInput.label">{{formInput.label}}</label>
+                        <input 
+                            v-if="formInput.type=='input' "
+                            type="input" 
+                            class="form-control" 
+                            :id="'input__'+formInputIdx" 
+                            :placeholder="formInput.label"
+                            v-model="entity.formInputsModel[formInput.label]">
+                        <select 
+                            v-if="formInput.type=='select' "
+                            class="form-control" 
+                            :id="'select__'+formInputIdx"
+                            v-model="entity.formInputsModel[formInput.label]">
+                            <option disabled value="">Please select one</option>
+                            <option 
+                                :value="option" 
+                                v-for="option in formInput.defaultValue">
+                                {{option}}
+                            </option>
+                          </select>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary" v-if="entity.httpmethod=='post' " @click="create()">Save</button>
+                    <button type="button" class="btn btn-outline-primary" v-if="entity.httpmethod=='put' " @click="update()">Update</button>
+                  </div>
+                  <div id="crud__result__resultTable" class="col-9">
+                      <div v-if="entity.spinner">
+                        <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>
+                        <span class="sr-only">Loading...</span>
+                      </div>
+                      <div v-else>
+                        <div v-if="entity.data.length > 0">
+                            
+                            <div id="crud__result__resultTable__search" class="form-group col-md-6">
+                                <input type="input" class="form-control" :placeholder="'seach in : '+entity.title">
+                            </div>
+
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th v-for="col in Object.keys(entity.data[0])">{{col}}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="data in entity.data">
+                                        <td v-for="col in Object.keys(data)">{{data[col]}}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-outline-primary" @click="edit(data)">
+                                                <i class="fa fa-pencil fx-2x" aria-hidden="true"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" @click="del(data)">
+                                                <i class="fa fa-trash-o fx-2x" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-else>
+                            <i class="fa fa-info" aria-hidden="true"></i> No data found!
+                        </div>
+                      </div>
+                  </div>
+              </div>
+          </section>
+      </template>
+   
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="application.js"></script>
+
+  </body>
+</html>
